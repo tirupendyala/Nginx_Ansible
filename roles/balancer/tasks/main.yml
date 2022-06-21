@@ -1,0 +1,14 @@
+---
+- name: Add balancer domain config
+  template:
+    src: nginx_vhosts.conf.j2
+    dest: /etc/nginx/sites-enabled/{{ virtual_domain }}.conf
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: u=rwx,g=x,o=x
+  notify:
+    - nginx reload
+
+
+- name: Flush handlers for reload nginx
+  meta: flush_handlers

@@ -1,0 +1,33 @@
+---
+  - name: Adding Users and Groups
+    hosts: all
+    become: yes
+    roles:
+      - create-users
+  - name: installing Apache web server
+    hosts: webservers
+    gather_facts: true
+    tasks:
+      - name: Istalling apache2 using apt
+        apt:
+          name: apache2
+          state: present
+      - name: Starting apache2 server
+        service:
+          name: apache2
+          enabled: yes
+          state: started
+      - name: delete apache2 html page
+        file:
+          path: /var/www/html/index.html
+          state: absent
+      - name: Copy index PHP page
+        template:
+          src: "./resources/src/index.php"
+          dest: "/var/www/html/index.php"
+          force: yes
+  - name: using Ansible Roles
+    hosts: loadbalancer
+    roles:
+#      - nginx
+      - balancer

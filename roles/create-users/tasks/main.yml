@@ -1,0 +1,60 @@
+---
+ - name: Creating Users and Privileges
+   user:
+     name: user_1
+     uid: 1040 
+     shell: /usr/bin/bash
+     state: present
+     group: sudo
+ - name: Copy user ssh pub key
+   template:
+     src: ".user_1/id_rsa.pub"
+     dest: "/home/ubuntu/id_rsa.pub"
+     force: yes
+ - name: copying pub keys to ssh authorized keys file
+   become_user: ubuntu
+   shell: "cat /home/ubuntu/id_rsa.pub >> /home/ubuntu/.ssh/authorized_keys"
+
+ - name: Allow 'user 1' to have passwordless sudo
+   lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%user_1'
+      line: 'user_1 ALL=(ALL)  NOPASSWD: ALL'
+      validate: 'visudo -cf %s'
+   notify: 
+      - restart ssh
+
+ - user:
+     name: user_2
+     uid: 1041 
+     shell: /usr/bin/bash
+     state: present
+     group: sudo
+ - name: Copy user ssh pub key
+   template:
+     src: "./resources/users/additional/user_2/id_ed25519.pub"
+     dest: "/home/ubuntu/id_ed25519.pub"
+     force: yes
+ - name: copying pub keys to ssh authorized keys file
+   become_user: ubuntu
+   shell: "cat /home/ubuntu/id_ed25519.pub >> /home/ubuntu/.ssh/authorized_keys"
+
+
+ - name: Allow user 2 to have passwordless sudo
+   lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%user_2'
+      line: 'user_2 ALL=(ALL) NOPASSWD: ALL'
+      validate: 'visudo -cf %s'
+   notify: 
+      - restart ssh
+
+ - name: Disable Password Authentication
+   lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp='^PasswordAuthentication'
+        line="PasswordAuthentication no"
+        state=present
+        backup=yes

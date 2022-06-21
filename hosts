@@ -1,0 +1,6 @@
+[webservers]
+VM_1_IP virtual_domain=VM_1_IP
+VM_2_IP virtual_domain=VM_2_IP
+
+[loadbalancer]
+VM_3_IP upstream1=VM_1_IP upstream2=VM_2_IP  virtual_domain=VM_3_IP

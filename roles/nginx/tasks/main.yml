@@ -1,0 +1,45 @@
+---
+- name: Install Nginx Web Server on Debian Family
+  apt:
+    name=nginx
+    update_cache=yes
+    state=present
+  notify:
+    - nginx systemd
+    
+- name: Create-check sites-enabled directory
+  file:
+    path: /etc/nginx/sites-enabled
+    state: directory
+    owner: root
+    group: root
+    mode: u=rwx,g=x,o=x
+
+- name: Replace nginx.conf
+  template:
+    src=nginx.conf.j2
+    dest=/etc/nginx/nginx.conf
+  notify:
+    - nginx reload
+
+- name: Create home directory for www
+  file:
+    path: /var/www/{{ virtual_domain }}
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+    mode: u=rwx,g=x,o=x
+ 
+- name: Place first html
+  template:
+    src=index.html.j2
+    dest=/var/www/{{ virtual_domain }}/index.html 
+
+- name: Add virtual domain config
+  template:
+    src=nginx_vhosts.conf.j2
+    dest=/etc/nginx/sites-enabled/{{ virtual_domain }}.conf
+  notify:
+    - nginx reload
+
+- meta: flush_handlers
