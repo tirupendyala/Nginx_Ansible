@@ -1,0 +1,46 @@
+default:
+  tags:
+    - docker # required, do not remove
+    
+stages:
+  - check_syntax
+  - run
+  - merge-to-pre-production
+  - merge-to-main
+
+image:
+  name: registry.gitlab.com/torese/docker-ansible
+
+variables:
+    ANSIBLE_HOST_KEY_CHECKING: 'false'
+    ANSIBLE_FORCE_COLOR: 'true'
+    ANSIBLE_PYTHON_INTERPRRTER: /usr/bin/python3
+
+check-syntax:
+  stage: check_syntax
+  script:
+    - ansible-playbook main.yml --syntax-check
+  when: manual
+
+run:
+  stage: run
+  script:
+    - ansible-playbook main.yml -u thirupathi --private-key ./resources/users/thirupathi/id_rsa
+  when: manual
+  
+merge-to-pre-production:
+  stage: merge-to-pre-production
+  rules:
+    - if: $CI_COMMIT_BRANCH == "testing"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  when: manual
+  script:
+    - echo "The selected brances will merge when Pipeline successes"
+merge-to-main:
+  stage: merge-to-main
+  rules:
+    - if: $CI_COMMIT_BRANCH == "pre-production"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  when: manual
+  script:
+    - echo "The selected brances will merge when Pipeline successes"
